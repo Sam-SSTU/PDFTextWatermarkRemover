@@ -1,6 +1,6 @@
 # PDF Text Watermark Remover
 
-A powerful desktop application that intelligently removes text-based watermarks from PDF files while preserving the original content. The application features a user-friendly GUI and supports customizable watermark detection.
+[English](README.md) | [中文说明](README_CN.md)
 
 ## Features
 
