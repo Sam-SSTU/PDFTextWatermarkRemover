@@ -4,6 +4,7 @@ import shutil
 import platform
 import subprocess
 import PyInstaller.__main__
+import time
 
 def clean_build_directories():
     """清理构建目录"""
@@ -13,21 +14,97 @@ def clean_build_directories():
             shutil.rmtree(directory)
 
 def sign_mac_app():
-    """为 Mac 应用程序签名"""
+    """为 Mac 应用程序签名并设置权限"""
     if sys.platform == "darwin":
         try:
-            # 创建临时证书
+            # 设置应用程序权限
+            app_path = 'dist/PDF-Watermark-Remover.app'
+            
+            # 添加必要的权限到 entitlements 文件
+            entitlements_content = '''<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+</dict>
+</plist>'''
+            
+            with open('entitlements.plist', 'w') as f:
+                f.write(entitlements_content)
+            
+            # 移除所有现有的扩展属性
+            subprocess.run(['xattr', '-cr', app_path], check=True)
+            
+            # 使用 codesign 进行签名
             subprocess.run([
                 'codesign',
                 '--force',
                 '--deep',
                 '--sign',
                 '-',  # 使用临时证书
-                'dist/PDF-Watermark-Remover.app'
+                '--entitlements',
+                'entitlements.plist',
+                '--options', 'runtime',
+                app_path
             ], check=True)
+            
+            # 验证签名
+            subprocess.run(['codesign', '--verify', '--verbose', app_path], check=True)
+            
+            # 清理临时文件
+            if os.path.exists('entitlements.plist'):
+                os.remove('entitlements.plist')
+                
             print("Mac 应用签名完成")
+            print("提示: 首次运行时，请在 Finder 中右键点击应用程序，选择'打开'")
+            
         except subprocess.CalledProcessError as e:
             print(f"Mac 应用签名失败: {e}")
+            print("提示: 您仍可以通过右键点击应用程序并选择'打开'来运行")
+
+def create_dmg():
+    """创建 DMG 文件"""
+    if platform.system() != 'Darwin':
+        return
+
+    try:
+        # 创建临时目录
+        dmg_temp = 'dmg_temp'
+        if os.path.exists(dmg_temp):
+            shutil.rmtree(dmg_temp)
+        os.makedirs(dmg_temp)
+
+        # 复制应用程序到临时目录
+        shutil.copytree('dist/PDF-Watermark-Remover.app', os.path.join(dmg_temp, 'PDF-Watermark-Remover.app'))
+
+        # 使用 create-dmg 创建 DMG 文件
+        subprocess.run([
+            'create-dmg',
+            '--volname', 'PDF-Watermark-Remover',
+            '--window-pos', '200', '120',
+            '--window-size', '600', '300',
+            '--icon-size', '100',
+            '--icon', 'PDF-Watermark-Remover.app', '175', '120',
+            '--hide-extension', 'PDF-Watermark-Remover.app',
+            '--app-drop-link', '425', '120',
+            'dist/PDF-Watermark-Remover.dmg',
+            dmg_temp
+        ], check=True)
+
+        # 清理临时目录
+        shutil.rmtree(dmg_temp)
+        print("DMG 文件创建成功！")
+
+    except subprocess.CalledProcessError as e:
+        print(f"创建 DMG 文件失败: {e}")
+        print("请确保已安装 create-dmg 工具：brew install create-dmg")
+    except Exception as e:
+        print(f"创建 DMG 文件时发生错误: {e}")
 
 def build_for_platform(target_platform):
     """为指定平台构建应用程序"""
@@ -71,9 +148,10 @@ def build_for_platform(target_platform):
         else:
             PyInstaller.__main__.run(args)
         
-        # 如果是 Mac 平台，进行签名
+        # 如果是 Mac 平台，进行签名和打包
         if target_platform == "darwin":
             sign_mac_app()
+            create_dmg()  # 创建 DMG 文件
         
         print(f"为 {target_platform} 平台构建完成！")
     except Exception as e:
