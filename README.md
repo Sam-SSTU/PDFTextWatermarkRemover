@@ -2,8 +2,6 @@
 
 A powerful desktop application that intelligently removes text-based watermarks from PDF files while preserving the original content. The application features a user-friendly GUI and supports customizable watermark detection.
 
-![Application Screenshot](screenshot.png)
-
 ## Features
 
 - 🔍 Smart watermark detection based on customizable keywords
@@ -102,58 +100,14 @@ The application uses several techniques to detect and remove watermarks:
 - Resource dictionary management
 - Content stream processing
 
-## Limitations
-
-- Only removes text-based watermarks
-- Does not affect image-based watermarks
-- Cannot remove watermarks that are part of the main content
-- May require multiple passes for complex documents
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Missing Text After Processing**
-   - Check if watermark keywords are too generic
-   - Adjust keywords to be more specific
-
-2. **Watermarks Not Detected**
-   - Verify that watermark text matches keywords
-   - Try adding variations of the watermark text
-
-3. **Application Won't Start**
-   - Ensure Python and all dependencies are installed
-   - Check system requirements
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 ## Acknowledgments
 
 - [pikepdf](https://github.com/pikepdf/pikepdf) for PDF processing
 - [tkinter](https://docs.python.org/3/library/tkinter.html) for the GUI framework
-
-## Support
-
-If you encounter any issues or have questions:
-1. Check the troubleshooting section
-2. Open an issue on GitHub
-3. Contact the maintainers
+- [gaoconghui](https://gist.github.com/gaoconghui/f21057c41c9386d0dcf32691c2d24692)
 
 ## Security Notice
 
 This tool is designed for legitimate use cases only. Users are responsible for ensuring they have the right to modify PDF files they process. 
 
-Ref:
-https://gist.github.com/gaoconghui/f21057c41c9386d0dcf32691c2d24692
+

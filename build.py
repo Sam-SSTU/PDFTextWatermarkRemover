@@ -1,32 +1,104 @@
-import PyInstaller.__main__
-import sys
 import os
+import sys
+import shutil
+import platform
+import subprocess
+import PyInstaller.__main__
 
-def build_app():
-    # Determine the appropriate icon file extension based on the OS
-    if sys.platform == 'darwin':  # macOS
-        icon_file = 'icon.icns'
-    elif sys.platform == 'win32':  # Windows
-        icon_file = 'icon.ico'
-    else:  # Linux
-        icon_file = 'icon.png'
+def clean_build_directories():
+    """清理构建目录"""
+    directories = ['build', 'dist']
+    for directory in directories:
+        if os.path.exists(directory):
+            shutil.rmtree(directory)
 
-    # PyInstaller command line arguments
+def build_for_platform(target_platform):
+    """为指定平台构建应用程序"""
+    app_name = "PDF-Watermark-Remover"
+    if target_platform == "win32":
+        app_name += ".exe"
+    
+    # 基本配置
+    icon = None
+    if target_platform == "darwin":
+        icon = "icon.icns"
+    elif target_platform == "win32":
+        icon = "icon.ico"
+    
+    # PyInstaller参数
     args = [
-        'gui.py',  # Your main GUI script
-        '--name=PDF-Watermark-Remover',  # Name of the output executable
-        '--onefile',  # Create a single executable file
-        '--windowed',  # Don't show console window when running the app
-        '--clean',  # Clean PyInstaller cache and remove temporary files
-        f'--icon={icon_file}' if os.path.exists(icon_file) else None,  # Add icon if it exists
-        '--add-data=README.md:.',  # Include README file
+        'gui.py',
+        f'--name={app_name}',
+        '--onefile',
+        '--windowed',
+        '--clean',
+        '--add-data=README.md:.',
     ]
+    
+    # 如果有图标文件，添加图标
+    if icon and os.path.exists(icon):
+        args.append(f'--icon={icon}')
+    
+    # 为Windows构建时添加特殊参数
+    if target_platform == "win32":
+        args.extend([
+            '--runtime-hook=win_runtime_hook.py',
+        ])
+    
+    # 运行PyInstaller
+    try:
+        if target_platform == "win32" and sys.platform == "darwin":
+            # 在Mac上使用wine构建Windows版本
+            cmd = ['wine', 'python', '-m', 'PyInstaller'] + args
+            subprocess.run(cmd, check=True)
+        else:
+            PyInstaller.__main__.run(args)
+        
+        print(f"为 {target_platform} 平台构建完成！")
+    except Exception as e:
+        print(f"构建 {target_platform} 版本时出错: {str(e)}")
 
-    # Remove None values from args
-    args = [arg for arg in args if arg is not None]
+def create_win_runtime_hook():
+    """创建Windows运行时钩子文件"""
+    with open('win_runtime_hook.py', 'w') as f:
+        f.write('''
+import os
+import sys
 
-    # Run PyInstaller
-    PyInstaller.__main__.run(args)
+# 确保在Windows上正确加载依赖
+if sys.platform == 'win32':
+    import tkinter
+    import tkinter.ttk
+''')
 
-if __name__ == '__main__':
-    build_app() 
+def build_application():
+    """构建应用程序"""
+    # 清理旧的构建文件
+    clean_build_directories()
+    
+    # 创建Windows运行时钩子
+    create_win_runtime_hook()
+    
+    # 检查是否安装了wine
+    if sys.platform == "darwin":
+        try:
+            subprocess.run(['wine', '--version'], capture_output=True, check=True)
+            has_wine = True
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            has_wine = False
+            print("警告: 未检测到wine，无法构建Windows版本")
+            print("请使用 'brew install wine' 安装wine")
+    
+    # 构建当前平台版本
+    build_for_platform(sys.platform)
+    
+    # 如果在Mac上且安装了wine，构建Windows版本
+    if sys.platform == "darwin" and has_wine:
+        print("\n开始构建Windows版本...")
+        build_for_platform("win32")
+    
+    print("\n所有构建任务完成！")
+    print("可执行文件位于 dist 目录")
+
+if __name__ == "__main__":
+    build_application() 
