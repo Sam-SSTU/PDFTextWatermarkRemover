@@ -15,7 +15,6 @@ DEFAULT_WATERMARK_KEYWORDS = [
     "Copyright Material",
     "Review Only",
     "Not for Redistribution",
-    "International"
 ]
 
 # 当前使用的水印关键词列表
