@@ -12,6 +12,23 @@ def clean_build_directories():
         if os.path.exists(directory):
             shutil.rmtree(directory)
 
+def sign_mac_app():
+    """为 Mac 应用程序签名"""
+    if sys.platform == "darwin":
+        try:
+            # 创建临时证书
+            subprocess.run([
+                'codesign',
+                '--force',
+                '--deep',
+                '--sign',
+                '-',  # 使用临时证书
+                'dist/PDF-Watermark-Remover.app'
+            ], check=True)
+            print("Mac 应用签名完成")
+        except subprocess.CalledProcessError as e:
+            print(f"Mac 应用签名失败: {e}")
+
 def build_for_platform(target_platform):
     """为指定平台构建应用程序"""
     app_name = "PDF-Watermark-Remover"
@@ -53,6 +70,10 @@ def build_for_platform(target_platform):
             subprocess.run(cmd, check=True)
         else:
             PyInstaller.__main__.run(args)
+        
+        # 如果是 Mac 平台，进行签名
+        if target_platform == "darwin":
+            sign_mac_app()
         
         print(f"为 {target_platform} 平台构建完成！")
     except Exception as e:
