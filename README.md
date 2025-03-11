@@ -1,4 +1,4 @@
-# PDF Text Watermark Remover
+# PDF Text Watermark Remover｜PDF水印文字移除工具
 
 [English](README.md) | [中文说明](README_CN.md)
 
