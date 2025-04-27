@@ -1,4 +1,6 @@
 # PDF Text Watermark Remover｜PDF水印文字移除工具
+<img width="712" alt="image" src="https://github.com/user-attachments/assets/278df6e5-20cb-4b19-9add-d490554a270c" />
+<img width="568" alt="image" src="https://github.com/user-attachments/assets/c983825b-59b2-4648-a313-4da8ab82b139" />
 
 [English](README.md) | [中文说明](README_CN.md)
 
